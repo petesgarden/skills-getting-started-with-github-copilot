@@ -3,6 +3,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+  const escapeHtml = (value) =>
+    String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
 
   // Function to fetch activities from API
   async function fetchActivities() {
@@ -19,20 +26,25 @@ document.addEventListener("DOMContentLoaded", () => {
         const activityCard = document.createElement("div");
         activityCard.className = "activity-card";
         activityCard.dataset.activityName = name;
+        const safeName = escapeHtml(name);
+        const safeDescription = escapeHtml(details.description);
+        const safeSchedule = escapeHtml(details.schedule);
 
         const spotsLeft = details.max_participants - details.participants.length;
         const participantsMarkup = details.participants.length
           ? details.participants
             .map(
-              (participant) => `
+              (participant) => {
+                const safeParticipant = escapeHtml(participant);
+                return `
                 <li class="participants-item">
-                  <span class="participant-email">${participant}</span>
+                  <span class="participant-email">${safeParticipant}</span>
                   <button
                     type="button"
                     class="participant-remove"
-                    data-activity-name="${name}"
-                    data-email="${participant}"
-                    aria-label="Remove ${participant} from ${name}"
+                    data-activity-name="${safeName}"
+                    data-email="${safeParticipant}"
+                    aria-label="Remove ${safeParticipant} from ${safeName}"
                     title="Remove participant"
                   >
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -40,15 +52,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     </svg>
                   </button>
                 </li>
-              `
+              `;
+              }
             )
             .join("")
           : '<li class="participants-empty">No students signed up yet</li>';
 
         activityCard.innerHTML = `
-          <h4>${name}</h4>
-          <p>${details.description}</p>
-          <p><strong>Schedule:</strong> ${details.schedule}</p>
+          <h4>${safeName}</h4>
+          <p>${safeDescription}</p>
+          <p><strong>Schedule:</strong> ${safeSchedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
           <div class="participants-section">
             <h5>Participants</h5>
